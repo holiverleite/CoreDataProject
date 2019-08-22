@@ -10,24 +10,49 @@ import UIKit
 
 class ViewController: UIViewController {
 
+    // MARK: IBOutlets
     @IBOutlet weak var tableView: UITableView! {
         didSet {
             self.tableView.dataSource = self
-            self.tableView.delegate = self
         }
     }
     
-    @IBAction func addName(_ sender: Any) {
-        
+    @IBOutlet weak var addNameButton: UIBarButtonItem! {
+        didSet {
+            self.addNameButton.target = self
+            self.addNameButton.action = #selector(self.addNameAction)
+        }
     }
     
+    // MARK: Variables
     var names: [String] = []
     
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        self.title = "The list"
+        self.title = "Task list"
         self.tableView.register(UITableViewCell.self, forCellReuseIdentifier: "Cell")
+    }
+    
+    @objc func addNameAction() {
+        let alert = UIAlertController(title: "New Task", message: "Add a new Task", preferredStyle: .alert)
+        
+        let saveAction = UIAlertAction(title: "Save", style: .default) { (action) in
+            guard let textField = alert.textFields?.first, let taskToSave = textField.text else {
+                return
+            }
+            
+            self.names.append(taskToSave)
+            self.tableView.reloadData()
+        }
+        
+        let cancelAction = UIAlertAction(title: "Cancel", style: .cancel)
+        
+        alert.addTextField(configurationHandler: nil)
+        alert.addAction(saveAction)
+        alert.addAction(cancelAction)
+        
+        self.present(alert, animated: true, completion: nil)
     }
 }
 

@@ -33,13 +33,10 @@
                         <viewLayoutGuide key="safeArea" id="6Tk-OE-BBY"/>
                     </view>
                     <navigationItem key="navigationItem" id="C11-Ys-zX8">
-                        <barButtonItem key="rightBarButtonItem" systemItem="add" id="bPj-sP-oBV">
-                            <connections>
-                                <action selector="addName:" destination="BYZ-38-t0r" id="afa-W6-jaS"/>
-                            </connections>
-                        </barButtonItem>
+                        <barButtonItem key="rightBarButtonItem" systemItem="add" id="bPj-sP-oBV"/>
                     </navigationItem>
                     <connections>
+                        <outlet property="addNameButton" destination="bPj-sP-oBV" id="IA9-fm-sMh"/>
                         <outlet property="tableView" destination="SKe-dC-TGy" id="cW4-SM-0yP"/>
                     </connections>
                 </viewController>
