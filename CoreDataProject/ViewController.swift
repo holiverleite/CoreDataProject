@@ -81,23 +81,6 @@ class ViewController: UIViewController {
         self.present(alert, animated: true, completion: nil)
     }
     
-    func save(taskDescription: String) {
-        if let context = self.managedContext {
-            let entity = NSEntityDescription.entity(forEntityName: StringConstants.EntityName.rawValue, in: context)!
-            
-            let task = NSManagedObject(entity: entity, insertInto: context)
-            
-            task.setValue(taskDescription, forKey: StringConstants.AttributeName.rawValue)
-            
-            do {
-                try context.save()
-                self.tasks.append(task)
-            } catch let error as NSError {
-                print("Could not save. \(error), \(error.userInfo)")
-            }
-        }
-    }
-    
     func reloadTasks() {
         if let context = self.managedContext {
             let fetchRequest = NSFetchRequest<NSManagedObject>(entityName: StringConstants.EntityName.rawValue)
@@ -113,11 +96,29 @@ class ViewController: UIViewController {
     func removeFromDataBase(_ object: NSManagedObject, _ indexPath: IndexPath) {
         if let context = self.managedContext {
             do {
-                try context.delete(object)
+                context.delete(object)
+                
                 self.tasks.remove(at: indexPath.row)
                 self.tableView.deleteRows(at: [indexPath], with: .fade)
             } catch let error as NSError {
                 print("Could not delete. \(error), \(error.userInfo)")
+            }
+        }
+    }
+    
+    func save(taskDescription: String) {
+        if let context = self.managedContext {
+            let entity = NSEntityDescription.entity(forEntityName: StringConstants.EntityName.rawValue, in: context)!
+            
+            let task = NSManagedObject(entity: entity, insertInto: context)
+            
+            task.setValue(taskDescription, forKey: StringConstants.AttributeName.rawValue)
+            
+            do {
+                try context.save()
+                self.tasks.append(task)
+            } catch let error as NSError {
+                print("Could not save. \(error), \(error.userInfo)")
             }
         }
     }
