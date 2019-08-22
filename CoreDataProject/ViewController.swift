@@ -7,6 +7,18 @@
 //
 
 import UIKit
+import CoreData
+
+enum StringConstants: String {
+    case Title = "Tasks list"
+    case CellIdentifier = "Cell"
+    case AlertTitle = "New Task"
+    case AlertMessage = "Add a new Task"
+    case SaveButton = "Save"
+    case CancelButton = "Cancel"
+    case EntityName = "Task"
+    case AttributeName = "taskDescription"
+}
 
 class ViewController: UIViewController {
 
@@ -14,6 +26,7 @@ class ViewController: UIViewController {
     @IBOutlet weak var tableView: UITableView! {
         didSet {
             self.tableView.dataSource = self
+            self.tableView.register(UITableViewCell.self, forCellReuseIdentifier: StringConstants.CellIdentifier.rawValue)
         }
     }
     
@@ -25,28 +38,34 @@ class ViewController: UIViewController {
     }
     
     // MARK: Variables
-    var names: [String] = []
+    var tasks: [NSManagedObject] = []
     
+    // MARK: Lifecycle
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        self.title = "Task list"
-        self.tableView.register(UITableViewCell.self, forCellReuseIdentifier: "Cell")
+        self.title = StringConstants.Title.rawValue
+    }
+    
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        
+        self.reloadTasks()
     }
     
     @objc func addNameAction() {
-        let alert = UIAlertController(title: "New Task", message: "Add a new Task", preferredStyle: .alert)
+        let alert = UIAlertController(title: StringConstants.AlertTitle.rawValue, message: StringConstants.AlertMessage.rawValue, preferredStyle: .alert)
         
-        let saveAction = UIAlertAction(title: "Save", style: .default) { (action) in
+        let saveAction = UIAlertAction(title: StringConstants.SaveButton.rawValue, style: .default) { (action) in
             guard let textField = alert.textFields?.first, let taskToSave = textField.text else {
                 return
             }
             
-            self.names.append(taskToSave)
+            self.save(taskDescription: taskToSave)
             self.tableView.reloadData()
         }
         
-        let cancelAction = UIAlertAction(title: "Cancel", style: .cancel)
+        let cancelAction = UIAlertAction(title: StringConstants.CancelButton.rawValue, style: .cancel)
         
         alert.addTextField(configurationHandler: nil)
         alert.addAction(saveAction)
@@ -54,17 +73,55 @@ class ViewController: UIViewController {
         
         self.present(alert, animated: true, completion: nil)
     }
+    
+    func save(taskDescription: String) {
+        guard let appDelegate = UIApplication.shared.delegate as? AppDelegate else {
+            return
+        }
+        
+        let managedContext = appDelegate.persistentContainer.viewContext
+        
+        let entity = NSEntityDescription.entity(forEntityName: StringConstants.EntityName.rawValue, in: managedContext)!
+        
+        let task = NSManagedObject(entity: entity, insertInto: managedContext)
+        
+        task.setValue(taskDescription, forKey: StringConstants.AttributeName.rawValue)
+        
+        do {
+            try managedContext.save()
+            tasks.append(task)
+        } catch let error as NSError {
+            print("Could not save. \(error), \(error.userInfo)")
+        }
+    }
+    
+    func reloadTasks() {
+        guard let appDelegate = UIApplication.shared.delegate as? AppDelegate else {
+            return
+        }
+        
+        let managedContext = appDelegate.persistentContainer.viewContext
+        
+        let fetchRequest = NSFetchRequest<NSManagedObject>(entityName: StringConstants.EntityName.rawValue)
+        
+        do {
+            self.tasks = try managedContext.fetch(fetchRequest)
+        } catch let error as NSError {
+            print("Could no fetch. \(error), \(error.userInfo)")
+        }
+    }
 }
 
 extension ViewController: UITableViewDataSource {
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        return self.names.count
+        return self.tasks.count
     }
     
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        let cell = tableView.dequeueReusableCell(withIdentifier: "Cell", for: indexPath)
+        let task = self.tasks[indexPath.row]
+        let cell = tableView.dequeueReusableCell(withIdentifier: StringConstants.CellIdentifier.rawValue, for: indexPath)
         
-        cell.textLabel?.text = names[indexPath.row]
+        cell.textLabel?.text = task.value(forKeyPath: StringConstants.AttributeName.rawValue) as? String
         return cell
     }
 }
